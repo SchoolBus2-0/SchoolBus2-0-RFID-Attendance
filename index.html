@@ -1,8 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://blockly.co.in/img/favicon.ico" rel="icon" type="image/x-icon">
     <title>SchoolBus2.0 RFID Student Attendance Dashboard</title>
     <meta name="robots" content="noindex">
     <style>
@@ -14,7 +16,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
             min-height: 100vh;
             padding: 20px;
         }
@@ -29,7 +31,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            background: linear-gradient(135deg, #4285F4 0%, #4285F4 100%);
             color: white;
             padding: 30px;
             text-align: center;
@@ -228,15 +230,15 @@
         }
 
         .log-entry.boarded {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
+            background: #E8F0FE;
+            color: #343434;
+            /* border-left: 4px solid #28a745; */
         }
 
         .log-entry.deboarded {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
+            background: #F0F0F0;
+            color: #343434;
+            /* //border-left: 4px solid #F0F0F0; */
         }
 
         .status-badge {
@@ -261,11 +263,11 @@
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 15px;
-            border-left: 4px solid #007bff;
+            /* border-left: 4px solid #007bff; */
         }
 
         .bus-info h4 {
-            color: #0056b3;
+            /* color: #0056b3; */
             margin-bottom: 5px;
         }
 
@@ -339,19 +341,31 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚌 SchoolBus2.0 RFID Student Attendance System</h1>
-            <p>Real-time Bus Attendance Monitoring Dashboard</p>
+            
+        <h1>
+        <img src="Vectora.png" alt="Logo" class="logo" style="
+            width: clamp(40px, 6vw, 60px);
+            height: clamp(40px, 6vw, 60px);
+            vertical-align: middle;
+            margin-right: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        ">  
+        SchoolBus2.0 RFID Student Attendance System
+    </h1>
+    <p>Real-time Bus Attendance Monitoring Dashboard</p>
         </div>
 
         <div class="controls">
-            <div class="date-filter">
-                <label for="dateFilter">📅 Select Date:</label>
-                <input type="date" id="dateFilter" value="">
+            <div class="date-filter" >
+                <label for="dateFilter">📅</label>
+                <input type="date" id="dateFilter" value="" style="color: #4285F4;"> 
             </div>
             <!-- <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button> -->
-             <h1 id="lastUpdated" style="font-size: 20px; color: rgb(0, 0, 0); margin-top: 10px;">
+           <h3 id="lastUpdated" style="font-size: 17px; color: rgba(0, 0, 0, 0.4); margin-top: 10px; font-weight: 400;">
     Last Updated At: -
-             </h1>
+</h3>
+
         </div>
         
 
@@ -419,8 +433,8 @@
 
         // Bus static data
         const busInfo = {
-            number: 'MH-12-AB-1234',
-            route: 'Route 5: Pune Station - School Campus',
+            number: 'B21 MH-15-AT-0717',
+            route: 'Cidco',
             driver: 'Mr. Rajesh Kumar',
             capacity: 45
         };
@@ -593,14 +607,17 @@ function processAttendanceData(data) {
                         </div>
                         <div class="student-body">
                             <div class="bus-info">
-                                <h4>🚌 Bus Information</h4>
+                                <h4 style="color: #4285F4;">Bus Information</h4>
+                                <br>
                                 <p><strong>Bus No:</strong> ${busInfo.number}</p>
+                                <br>
                                 <p><strong>Route:</strong> ${busInfo.route}</p>
+                                <br>
                                 <p><strong>Driver:</strong> ${busInfo.driver}</p>
                             </div>
                             
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                <span><strong>Status:</strong></span>
+                                <span><strong style="color: #4285F4;">Status:</strong></span>
                                 <span class="status-badge ${isPresent ? 'status-present' : 'status-absent'}">
                                     ${isPresent ? '✅ Present' : '❌ Absent'}
                                 </span>
@@ -611,10 +628,10 @@ function processAttendanceData(data) {
                                 : ''}
                             
                             <div class="attendance-logs">
-                                <h4 style="margin-bottom: 10px; color: #495057;">📝 Today's Activity Log</h4>
+                                <h4 style="margin-bottom: 10px; color: #4285F4;">Today's Activity Log</h4>
                                 ${logs.length > 0 ? logs.map(log => `
                                     <div class="log-entry ${log.status}">
-                                        <span>${log.status === 'boarded' ? '🚌 Boarded' : '🚪 Deboarded'}</span>
+                                        <span>${log.status === 'boarded' ? '<img src="boarded.png" alt="Boarded" style="width:16px; height:16px; vertical-align:middle;"> Boarded' : '<img src="deboarded.png" alt="Deboarded" style="width:16px; height:16px; vertical-align:middle;"> Deboarded'}</span></span>
                                         <span>${formatTime(log.date)}</span>
                                     </div>
                                 `).join('') : '<p style="color: #6c757d; font-style: italic;">No activity recorded today</p>'}
