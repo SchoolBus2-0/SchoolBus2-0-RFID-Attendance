@@ -631,7 +631,7 @@ function processAttendanceData(data) {
                                 <h4 style="margin-bottom: 10px; color: #4285F4;">Today's Activity Log</h4>
                                 ${logs.length > 0 ? logs.map(log => `
                                     <div class="log-entry ${log.status}">
-                                        <span>${log.status === 'boarded' ? '<img src="board-svg.png" alt="Boarded" style="width:16px; height:16px; vertical-align:middle;"> Boarded' : '<img src="deboard-svg.png" alt="Deboarded" style="width:16px; height:16px; vertical-align:middle;"> Deboarded'}</span></span>
+                                        <span>${log.status === 'boarded' ? '<img src="board-svg.svg" alt="Boarded" style="width:16px; height:16px; vertical-align:middle;"> Boarded' : '<img src="deboard-svg.svg" alt="Deboarded" style="width:16px; height:16px; vertical-align:middle;"> Deboarded'}</span></span>
                                         <span>${formatTime(log.date)}</span>
                                     </div>
                                 `).join('') : '<p style="color: #6c757d; font-style: italic;">No activity recorded today</p>'}
