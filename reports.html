@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SchoolBus2.0 Bus Attendance Reports</title>
+    <meta name="robots" content="noindex">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .header p { font-size: 1.1rem; opacity: 0.9; }
+        
+        .debug-panel { background: #2c3e50; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-family: monospace; font-size: 12px; }
+        .debug-panel h4 { margin-bottom: 10px; color: #3498db; }
+        .debug-log { max-height: 200px; overflow-y: auto; background: #34495e; padding: 10px; border-radius: 4px; }
+        
+        .reports-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-bottom: 30px; }
+        .report-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-left: 5px solid #3498db; transition: all 0.3s ease; }
+        .report-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+        .report-card h3 { margin-bottom: 20px; color: #2c3e50; font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        .form-group input, .form-group select { width: 100%; padding: 12px 15px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 14px; transition: border-color 0.3s; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #3498db; }
+        
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; width: 100%; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-primary { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; }
+        .btn-success { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn:active { transform: translateY(0); }
+        
+        .results-section { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-top: 30px; }
+        .action-buttons { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .download-buttons { display: flex; gap: 15px; }
+        
+        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .summary-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .summary-value { font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; }
+        .summary-label { font-size: 13px; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .table-responsive { overflow-x: auto; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 0; }
+        th, td { padding: 15px 12px; text-align: left; border-bottom: 1px solid #f1f3f4; }
+        th { background: #f8f9fa; font-weight: 600; color: #2c3e50; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        tr:hover { background: #f8f9fa; }
+        
+        .status-boarded { color: #27ae60; font-weight: 700; background: #d5f4e6; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+        .status-deboarded { color: #e74c3c; font-weight: 700; background: #fdeaea; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+        .status-duplicate { color: #f39c12; font-weight: 700; background: #fef9e7; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+        
+        .record-cell { font-size: 12px; padding: 6px 10px; background: #f8f9fa; margin: 3px 0; border-radius: 6px; border-left: 3px solid #3498db; }
+        
+        .loading { text-align: center; padding: 40px; color: #666; }
+        .loading::before { content: "⏳ "; font-size: 1.5rem; }
+        .no-data { text-align: center; padding: 40px; color: #999; font-style: italic; }
+        .no-data::before { content: "📭 "; font-size: 1.5rem; display: block; margin-bottom: 10px; }
+        
+        .alert { padding: 15px 20px; border-radius: 8px; margin: 15px 0; font-weight: 500; }
+        .alert-error { background: #fdeaea; color: #e74c3c; border-left: 4px solid #e74c3c; }
+        .alert-success { background: #d5f4e6; color: #27ae60; border-left: 4px solid #27ae60; }
+        .alert-warning { background: #fef9e7; color: #f39c12; border-left: 4px solid #f39c12; }
+        .alert-info { background: #e3f2fd; color: #2196f3; border-left: 4px solid #2196f3; }
+        
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .status-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
+        .status-online { background: #27ae60; }
+        .status-offline { background: #e74c3c; }
+        .status-loading { background: #f39c12; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .header h1 { font-size: 2rem; }
+            .reports-grid { grid-template-columns: 1fr; }
+            .action-buttons { flex-direction: column; align-items: stretch; }
+            .download-buttons { flex-direction: column; }
+            .summary-cards { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚌 SchoolBus2.0 RFID Bus Attendance Reports</h1>
+            <p>Ashoka Universal School</p>
+            <div style="margin-top: 15px; font-size: 14px;">
+                <span class="status-indicator" id="connectionStatus"></span>
+                <span id="connectionText">Checking connection...</span>
+            </div>
+        </div>
+
+       
+
+        <div class="reports-grid">
+            <!-- Student Wise Report -->
+            <div class="report-card">
+                <h3>📊 Student Wise Attendance</h3>
+                <div class="form-group">
+                    <label>Select Student:</label>
+                    <select id="studentSelect">
+                        <option value="">Loading students...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>From Date:</label>
+                    <input type="date" id="studentFromDate" value="2025-06-15">
+                </div>
+                <div class="form-group">
+                    <label>To Date:</label>
+                    <input type="date" id="studentToDate" value="2025-06-21">
+                </div>
+                <button class="btn btn-primary" id="generateStudentBtn">
+                    <span id="studentBtnText">Generate Report</span>
+                </button>
+            </div>
+
+            <!-- Bus Wise Report -->
+            <div class="report-card">
+                <h3>🚍 Bus Wise Attendance</h3>
+                <div class="form-group">
+                    <label>Bus Number:</label>
+                    <select id="busSelect">
+                        <option value="99">MH 15 EF 0162</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>From Date:</label>
+                    <input type="date" id="busFromDate" value="2025-06-15">
+                </div>
+                <div class="form-group">
+                    <label>To Date:</label>
+                    <input type="date" id="busToDate" value="2025-06-21">
+                </div>
+                <button class="btn btn-primary" id="generateBusBtn">
+                    <span id="busBtnText">Generate Report</span>
+                </button>
+            </div>
+
+            <!-- Raw Data Report -->
+            <div class="report-card">
+                <h3>📋 Raw Attendance Data</h3>
+                <div class="form-group">
+                    <label>From Date:</label>
+                    <input type="date" id="rawFromDate" value="2025-05-01">
+                </div>
+                <div class="form-group">
+                    <label>To Date:</label>
+                    <input type="date" id="rawToDate" value="2025-06-23">
+                </div>
+                <button class="btn btn-primary" id="generateRawBtn">
+                    <span id="rawBtnText">Generate Report</span>
+                </button>
+            </div>
+
+            <!-- Daily Summary -->
+            <div class="report-card">
+                <h3>📅 Daily Summary</h3>
+                <div class="form-group">
+                    <label>Select Date:</label>
+                    <input type="date" id="dailyDate" value="2025-06-21">
+                </div>
+                <button class="btn btn-primary" id="generateDailyBtn">
+                    <span id="dailyBtnText">Generate Summary</span>
+                </button>
+            </div>
+
+            <!-- Weekly Report -->
+            <div class="report-card">
+                <h3>📈 Weekly Report</h3>
+                <div class="form-group">
+                    <label>Week Starting:</label>
+                    <input type="date" id="weekStartDate" value="2025-06-16">
+                </div>
+                <button class="btn btn-primary" id="generateWeeklyBtn">
+                    <span id="weeklyBtnText">Generate Report</span>
+                </button>
+            </div>
+
+            <!-- Monthly Summary -->
+            <div class="report-card">
+                <h3>📊 Monthly Summary</h3>
+                <div class="form-group">
+                    <label>Month:</label>
+                    <select id="monthSelect">
+                        <option value="2025-06">June 2025</option>
+                        <option value="2025-05">May 2025</option>
+                        <option value="2025-04">April 2025</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="generateMonthlyBtn">
+                    <span id="monthlyBtnText">Generate Summary</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <div class="action-buttons">
+                <h2 id="reportTitle">Report Results</h2>
+                <div class="download-buttons">
+                    <button class="btn btn-success" id="downloadExcelBtn">📊 Download Excel</button>
+                    <button class="btn btn-danger" id="downloadPDFBtn">📄 Download PDF</button>
+                </div>
+            </div>
+            
+            <div id="summarySection"></div>
+            <div id="reportContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            BASE_URL: 'https://schoolbusapi.com',
+            ENDPOINTS: {
+                STUDENTS_WITH_ATTENDANCE: '/parent/rfid/students-with-attendance/',
+                STUDENT_ATTENDANCE: '/parent/rfid/view-student-attendance/',
+                BUS_ATTENDANCE: '/parent/rfid/bus-attendance/'
+            },
+            TIMEOUT: 30000,
+            RETRY_ATTEMPTS: 3,
+            DEBUG_MODE: true
+        };
+
+        // Global state
+        let currentReportData = [];
+        let allStudentsData = [];
+        let isLoading = false;
+        let systemStatus = 'initializing';
+
+        // Debug logging system
+        const Debug = {
+            log: function(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+                
+                console.log(logEntry);
+                
+                if (CONFIG.DEBUG_MODE) {
+                    const debugLog = document.getElementById('debugLog');
+                    if (debugLog) {
+                        debugLog.innerHTML += logEntry + '\n';
+                        debugLog.scrollTop = debugLog.scrollHeight;
+                    }
+                }
+            },
+            error: function(message) { this.log(message, 'error'); },
+            warn: function(message) { this.log(message, 'warn'); },
+            success: function(message) { this.log(message, 'success'); }
+        };
+
+        // Enhanced fetch with retry logic
+        async function fetchWithRetry(url, options = {}, retries = CONFIG.RETRY_ATTEMPTS) {
+            Debug.log(`Making API call to: ${url}`);
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), CONFIG.TIMEOUT);
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        ...options.headers
+                    }
+                });
+                
+                clearTimeout(timeoutId);
+                
+                Debug.log(`Response status: ${response.status} ${response.statusText}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                Debug.success(`API call successful. Received ${Array.isArray(data) ? data.length : Object.keys(data).length} records`);
+                return data;
+                
+            } catch (error) {
+                clearTimeout(timeoutId);
+                Debug.error(`API call failed: ${error.message}`);
+                
+                if (retries > 0 && !error.name === 'AbortError') {
+                    Debug.log(`Retrying... (${retries} attempts remaining)`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    return fetchWithRetry(url, options, retries - 1);
+                }
+                
+                throw error;
+            }
+        }
+
+        // Status management
+        function updateSystemStatus(status, message) {
+            systemStatus = status;
+            const statusIndicator = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connectionText');
+            
+            if (statusIndicator && statusText) {
+                statusIndicator.className = `status-indicator status-${status}`;
+                statusText.textContent = message;
+            }
+            
+            Debug.log(`System status: ${status} - ${message}`);
+        }
+
+        // Enhanced alert system
+        function showAlert(message, type = 'info', duration = 5000) {
+            removeExistingAlerts();
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `<strong>${type.toUpperCase()}:</strong> ${message}`;
+            
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.reports-grid'));
+            
+            if (duration > 0) {
+                setTimeout(() => alertDiv.remove(), duration);
+            }
+            
+            Debug.log(`Alert shown: ${type} - ${message}`);
+        }
+
+        function removeExistingAlerts() {
+            document.querySelectorAll('.alert').forEach(el => el.remove());
+        }
+
+        // Button state management
+        function setButtonLoading(buttonId, textId, loading = true) {
+            const button = document.getElementById(buttonId);
+            const text = document.getElementById(textId);
+            
+            if (button && text) {
+                button.disabled = loading;
+                if (loading) {
+                    text.innerHTML = '<span class="spinner"></span>Generating...';
+                } else {
+                    text.textContent = text.textContent.includes('Summary') ? 'Generate Summary' : 'Generate Report';
+                }
+            }
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            Debug.log('DOM loaded, initializing application...');
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            try {
+                updateSystemStatus('loading', 'Initializing system...');
+                
+                // Test API connectivity
+                await testAPIConnectivity();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Load initial data
+                await loadStudents();
+                
+                updateSystemStatus('online', 'System Online');
+                showAlert('Bus Attendance Reports System initialized successfully!', 'success', 3000);
+                
+            } catch (error) {
+                Debug.error(`Failed to initialize: ${error.message}`);
+                updateSystemStatus('offline', 'System initialization failed');
+                showAlert('Failed to initialize system. Please check your connection and refresh the page.', 'error', 0);
+            }
+        }
+
+        async function testAPIConnectivity() {
+            Debug.log('Testing API connectivity...');
+            try {
+                // Try a simple API call to test connectivity
+                const url = `${CONFIG.BASE_URL}${CONFIG.ENDPOINTS.STUDENTS_WITH_ATTENDANCE}?from_date=2025-06-01&to_date=2025-06-01`;
+                await fetchWithRetry(url);
+                Debug.success('API connectivity test passed');
+            } catch (error) {
+                Debug.error(`API connectivity test failed: ${error.message}`);
+                throw new Error('Unable to connect to the API server');
+            }
+        }
+
+        function setupEventListeners() {
+            Debug.log('Setting up event listeners...');
+            
+            // Date change listeners
+            document.getElementById('studentFromDate').addEventListener('change', reloadStudentsForStudent);
+            document.getElementById('studentToDate').addEventListener('change', reloadStudentsForStudent);
+            document.getElementById('rawFromDate').addEventListener('change', reloadStudentsForRaw);
+            document.getElementById('rawToDate').addEventListener('change', reloadStudentsForRaw);
+
+            // Button event listeners with error handling
+            const buttons = [
+                { id: 'generateStudentBtn', handler: generateStudentReport },
+                { id: 'generateBusBtn', handler: generateBusReport },
+                { id: 'generateRawBtn', handler: generateRawDataReport },
+                { id: 'generateDailyBtn', handler: generateDailySummary },
+                { id: 'generateWeeklyBtn', handler: generateWeeklyReport },
+                { id: 'generateMonthlyBtn', handler: generateMonthlySummary },
+                { id: 'downloadExcelBtn', handler: downloadExcel },
+                { id: 'downloadPDFBtn', handler: downloadPDF }
+            ];
+
+            buttons.forEach(({ id, handler }) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('click', async () => {
+                        try {
+                            Debug.log(`${id} clicked`);
+                            await handler();
+                        } catch (error) {
+                            Debug.error(`Error in ${id}: ${error.message}`);
+                            showAlert(`Error: ${error.message}`, 'error');
+                        }
+                    });
+                } else {
+                    Debug.warn(`Button ${id} not found`);
+                }
+            });
+            
+            Debug.success('All event listeners set up successfully');
+        }
+
+        async function loadStudents(fromDate = '2025-05-01', toDate = '2025-06-23') {
+            if (isLoading) {
+                Debug.warn('Students already loading, skipping...');
+                return;
+            }
+            
+            try {
+                isLoading = true;
+                updateSystemStatus('loading', 'Loading students...');
+                
+                const studentSelect = document.getElementById('studentSelect');
+                studentSelect.innerHTML = '<option value="">Loading students...</option>';
+                
+                const url = `${CONFIG.BASE_URL}${CONFIG.ENDPOINTS.STUDENTS_WITH_ATTENDANCE}?from_date=${fromDate}&to_date=${toDate}`;
+                allStudentsData = await fetchWithRetry(url);
+                
+                studentSelect.innerHTML = '<option value="">Select Student</option>';
+                
+                allStudentsData.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.rfid;
+                    option.textContent = `${student.student_name} (${student.class_name}-${student.section})`;
+                    studentSelect.appendChild(option);
+                });
+                
+                updateSystemStatus('online');
+                showAlert(`Successfully loaded ${allStudentsData.length} students`, 'success', 3000);
+                
+            } catch (error) {
+                Debug.error(`Failed to load students: ${error.message}`);
+                updateSystemStatus('offline', 'Failed to load students');
+                
+                const studentSelect = document.getElementById('studentSelect');
+                studentSelect.innerHTML = '<option value="">Error loading students</option>';
+                
+                showAlert('Unable to load students. Please check your connection and try again.', 'error');
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        async function reloadStudentsForStudent() {
+            const fromDate = document.getElementById('studentFromDate').value;
+            const toDate = document.getElementById('studentToDate').value;
+            
+            if (fromDate && toDate && fromDate <= toDate) {
+                Debug.log(`Reloading students for date range: ${fromDate} to ${toDate}`);
+                await loadStudents(fromDate, toDate);
+            }
+        }
+
+        async function reloadStudentsForRaw() {
+            const fromDate = document.getElementById('rawFromDate').value;
+            const toDate = document.getElementById('rawToDate').value;
+            
+            if (fromDate && toDate && fromDate <= toDate) {
+                Debug.log(`Reloading students for raw data: ${fromDate} to ${toDate}`);
+                await loadStudents(fromDate, toDate);
+            }
+        }
+
+        async function generateStudentReport() {
+            const rfid = document.getElementById('studentSelect').value;
+            const fromDate = document.getElementById('studentFromDate').value;
+            const toDate = document.getElementById('studentToDate').value;
+
+            if (!rfid) {
+                showAlert('Please select a student', 'warning');
+                return;
+            }
+
+            if (!fromDate || !toDate) {
+                showAlert('Please select both from and to dates', 'warning');
+                return;
+            }
+
+            try {
+                setButtonLoading('generateStudentBtn', 'studentBtnText', true);
+                
+                const url = `${CONFIG.BASE_URL}${CONFIG.ENDPOINTS.STUDENT_ATTENDANCE}?from_date=${fromDate}&to_date=${toDate}&rfid=${rfid}`;
+                const student = await fetchWithRetry(url);
+                
+                currentReportData = [];
+                
+                if (student.attendance_by_bus && student.attendance_by_bus.length > 0) {
+                    student.attendance_by_bus.forEach(busData => {
+                        busData.attendances.forEach(attendance => {
+                            const attendanceDate = new Date(attendance.time).toISOString().split('T')[0];
+                            if (attendanceDate >= fromDate && attendanceDate <= toDate) {
+                                currentReportData.push({
+                                    student_name: student.student_name,
+                                    rfid: student.rfid,
+                                    class: `${student.class_name}-${student.section}`,
+                                    gender: student.gender,
+                                    vehicle: busData.bus_number,
+                                    date: attendanceDate,
+                                    time: attendance.time,
+                                    status: attendance.status,
+                                    duplicate: attendance.duplicate || false
+                                });
+                            }
+                        });
+                    });
+                }
+
+                displayStudentReport(student);
+                showAlert(`Student report generated with ${currentReportData.length} records`, 'success', 3000);
+                
+            } catch (error) {
+                Debug.error(`Failed to generate student report: ${error.message}`);
+                showAlert('Unable to generate student report. Please try again.', 'error');
+            } finally {
+                setButtonLoading('generateStudentBtn', 'studentBtnText', false);
+            }
+        }
+
+        function displayStudentReport(student) {
+            document.getElementById('reportTitle').textContent = `Student Report: ${student.student_name}`;
+            
+            let summaryHtml = `
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-value">${currentReportData.length}</div>
+                        <div class="summary-label">Total Records</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${currentReportData.filter(r => r.status === 'boarded').length}</div>
+                        <div class="summary-label">Boarded</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${currentReportData.filter(r => r.status === 'deboarded').length}</div>
+                        <div class="summary-label">Deboarded</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${currentReportData.filter(r => r.status === 'duplicate').length}</div>
+                        <div class="summary-label">Duplicates</div>
+                    </div>
+                </div>
+            `;
+
+            // Group records by date for flexible display
+            const recordsByDate = {};
+            currentReportData.forEach(record => {
+                if (!recordsByDate[record.date]) {
+                    recordsByDate[record.date] = [];
+                }
+                recordsByDate[record.date].push(record);
+            });
+
+            let tableHtml = `
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Bus Number</th>
+                                <th>Student Name</th>
+                                <th>Class</th>
+                                <th>Gender</th>
+                                <th>Records</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            if (Object.keys(recordsByDate).length === 0) {
+                tableHtml += '<tr><td colspan="6" class="no-data">No attendance records found for selected period</td></tr>';
+            } else {
+                Object.keys(recordsByDate).sort().forEach(date => {
+                    const dayRecords = recordsByDate[date];
+                    const recordsHtml = dayRecords.map((record, index) => {
+                        const time = new Date(record.time).toLocaleTimeString();
+                        return `<div class="record-cell">Record ${index + 1}: <span class="status-${record.status}">${record.status.toUpperCase()}</span> at ${time}</div>`;
+                    }).join('');
+
+                    const firstRecord = dayRecords[0];
+                    tableHtml += `
+                        <tr>
+                            <td>${date}</td>
+                            <td>${firstRecord.vehicle}</td>
+                            <td>${firstRecord.student_name}</td>
+                            <td>${firstRecord.class}</td>
+                            <td>${firstRecord.gender}</td>
+                            <td>${recordsHtml}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            tableHtml += '</tbody></table></div>';
+
+            document.getElementById('summarySection').innerHTML = summaryHtml;
+            document.getElementById('reportContent').innerHTML = tableHtml;
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        async function generateBusReport() {
+            const mid = document.getElementById('busSelect').value;
+            const fromDate = document.getElementById('busFromDate').value;
+            const toDate = document.getElementById('busToDate').value;
+
+            if (!fromDate || !toDate) {
+                showAlert('Please select both from and to dates', 'warning');
+                return;
+            }
+
+            try {
+                setButtonLoading('generateBusBtn', 'busBtnText', true);
+                
+                const url = `${CONFIG.BASE_URL}${CONFIG.ENDPOINTS.BUS_ATTENDANCE}?mid=${mid}`;
+                const busData = await fetchWithRetry(url);
+                
+                currentReportData = [];
+                
+                busData.students.forEach(student => {
+                    if (student.attendances && student.attendances.length > 0) {
+                        student.attendances.forEach(attendance => {
+                            const attendanceDate = new Date(attendance.time).toISOString().split('T')[0];
+                            if (attendanceDate >= fromDate && attendanceDate <= toDate) {
+                                currentReportData.push({
+                                    student_name: student.student_name,
+                                    rfid: student.rfid,
+                                    class: `${student.class_name}-${student.section}`,
+                                    gender: student.gender,
+                                    vehicle: busData.bus_number,
+                                    date: attendanceDate,
+                                    time: attendance.time,
+                                    status: attendance.status
+                                });
+                            }
+                        });
+                    }
+                });
+
+                displayBusReport(busData.bus_number);
+                showAlert(`Bus report generated with ${currentReportData.length} records`, 'success', 3000);
+                
+            } catch (error) {
+                Debug.error(`Failed to generate bus report: ${error.message}`);
+                showAlert('Unable to generate bus report. Please try again.', 'error');
+            } finally {
+                setButtonLoading('generateBusBtn', 'busBtnText', false);
+            }
+        }
+
+        function displayBusReport(busNumber) {
+            document.getElementById('reportTitle').textContent = `Bus Report: ${busNumber}`;
+            
+            const uniqueStudents = [...new Set(currentReportData.map(r => r.student_name))].length;
+            const uniqueDates = [...new Set(currentReportData.map(r => r.date))].length;
+
+            let summaryHtml = `
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-value">${uniqueStudents}</div>
+                        <div class="summary-label">Students</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${uniqueDates}</div>
+                        <div class="summary-label">Days</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${currentReportData.filter(r => r.status === 'boarded').length}</div>
+                        <div class="summary-label">Boardings</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${currentReportData.filter(r => r.status === 'deboarded').length}</div>
+                        <div class="summary-label">Deboardings</div>
+                    </div>
+                </div>
+            `;
+
+            // Group by student and date for flexible records display
+            const groupedData = {};
+            currentReportData.forEach(record => {
+                const key = `${record.student_name}_${record.date}`;
+                if (!groupedData[key]) {
+                    groupedData[key] = {
+                        student_name: record.student_name,
+                        class: record.class,
+                        date: record.date,
+                        vehicle: record.vehicle,
+                        records: []
+                    };
+                }
+                groupedData[key].records.push(record);
+            });
+
+            let tableHtml = `
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Class</th>
+                                <th>Bus Number</th>
+                                <th>Date</th>
+                                <th>Records</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            if (Object.keys(groupedData).length === 0) {
+                tableHtml += '<tr><td colspan="5" class="no-data">No attendance records found for selected period</td></tr>';
+            } else {
+                Object.values(groupedData).forEach(group => {
+                    const recordsHtml = group.records.map((record, index) => {
+                        const time = new Date(record.time).toLocaleTimeString();
+                        return `<div class="record-cell">Record ${index + 1}: <span class="status-${record.status}">${record.status.toUpperCase()}</span> at ${time}</div>`;
+                    }).join('');
+
+                    tableHtml += `
+                        <tr>
+                            <td>${group.student_name}</td>
+                            <td>${group.class}</td>
+                            <td>${group.vehicle}</td>
+                            <td>${group.date}</td>
+                            <td>${recordsHtml}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            tableHtml += '</tbody></table></div>';
+
+            document.getElementById('summarySection').innerHTML = summaryHtml;
+            document.getElementById('reportContent').innerHTML = tableHtml;
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        async function generateRawDataReport() {
+            const fromDate = document.getElementById('rawFromDate').value;
+            const toDate = document.getElementById('rawToDate').value;
+
+            if (!fromDate || !toDate) {
+                showAlert('Please select both from and to dates', 'warning');
+                return;
+            }
+
+            try {
+                setButtonLoading('generateRawBtn', 'rawBtnText', true);
+                
+                await loadStudents(fromDate, toDate);
+                currentReportData = [];
+                
+                allStudentsData.forEach(student => {
+                    if (student.attendance_by_mid && student.attendance_by_mid.length > 0) {
+                        student.attendance_by_mid.forEach(busData => {
+                            busData.attendances.forEach(attendance => {
+                                const attendanceDate = new Date(attendance.time).toISOString().split('T')[0];
+                                if (attendanceDate >= fromDate && attendanceDate <= toDate) {
+                                    currentReportData.push({
+                                        student_name: student.student_name,
+                                        rfid: student.rfid,
+                                        class: `${student.class_name}-${student.section}`,
+                                        gender: student.gender,
+                                        vehicle: student.vehicle,
+                                        date: attendanceDate,
+                                        time: attendance.time,
+                                        status: attendance.status
+                                    });
+                                }
+                            });
+                        });
+                    } else {
+                        currentReportData.push({
+                            student_name: student.student_name,
+                            rfid: student.rfid,
+                            class: `${student.class_name}-${student.section}`,
+                            gender: student.gender,
+                            vehicle: student.vehicle,
+                            date: '-',
+                            time: '-',
+                            status: 'No Records'
+                        });
+                    }
+                });
+
+                displayRawDataReport();
+                showAlert(`Raw data report generated with ${currentReportData.length} records`, 'success', 3000);
+
+            } catch (error) {
+                Debug.error(`Failed to generate raw data report: ${error.message}`);
+                showAlert('Unable to generate raw data report. Please try again.', 'error');
+            } finally {
+                setButtonLoading('generateRawBtn', 'rawBtnText', false);
+            }
+        }
+
+        function displayRawDataReport() {
+            document.getElementById('reportTitle').textContent = 'Raw Attendance Data';
+            
+            const totalStudents = [...new Set(currentReportData.map(r => r.student_name))].length;
+            const activeStudents = [...new Set(currentReportData.filter(r => r.status !== 'No Records').map(r => r.student_name))].length;
+
+            let summaryHtml = `
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-value">${totalStudents}</div>
+                        <div class="summary-label">Total Students</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${activeStudents}</div>
+                        <div class="summary-label">Active Students</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${currentReportData.length}</div>
+                        <div class="summary-label">Total Records</div>
+                    </div>
+                </div>
+            `;
+
+            let tableHtml = `
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>RFID</th>
+                                <th>Student Name</th>
+                                <th>Class</th>
+                                <th>Gender</th>
+                                <th>Bus Number</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            currentReportData.forEach(record => {
+                const displayTime = record.time !== '-' ? new Date(record.time).toLocaleString() : '-';
+                tableHtml += `
+                    <tr>
+                        <td>${record.rfid}</td>
+                        <td>${record.student_name}</td>
+                        <td>${record.class}</td>
+                        <td>${record.gender}</td>
+                        <td>${record.vehicle}</td>
+                        <td>${record.date}</td>
+                        <td>${displayTime}</td>
+                        <td><span class="status-${record.status.toLowerCase().replace(' ', '-')}">${record.status.toUpperCase()}</span></td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += '</tbody></table></div>';
+
+            document.getElementById('summarySection').innerHTML = summaryHtml;
+            document.getElementById('reportContent').innerHTML = tableHtml;
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        async function generateDailySummary() {
+            const selectedDate = document.getElementById('dailyDate').value;
+            
+            if (!selectedDate) {
+                showAlert('Please select a date', 'warning');
+                return;
+            }
+
+            try {
+                setButtonLoading('generateDailyBtn', 'dailyBtnText', true);
+                
+                await loadStudents(selectedDate, selectedDate);
+                currentReportData = [];
+                
+                allStudentsData.forEach(student => {
+                    if (student.attendance_by_mid && student.attendance_by_mid.length > 0) {
+                        student.attendance_by_mid.forEach(busData => {
+                            const dayRecords = busData.attendances.filter(attendance => {
+                                const attendanceDate = new Date(attendance.time).toISOString().split('T')[0];
+                                return attendanceDate === selectedDate;
+                            });
+
+                            if (dayRecords.length > 0) {
+                                currentReportData.push({
+                                    student_name: student.student_name,
+                                    class: `${student.class_name}-${student.section}`,
+                                    vehicle: student.vehicle,
+                                    records: dayRecords.map((record, index) => `Record ${index + 1}: ${record.status.toUpperCase()} at ${new Date(record.time).toLocaleTimeString()}`).join(', '),
+                                    total_records: dayRecords.length
+                                });
+                            }
+                        });
+                    }
+                });
+
+                displayDailySummary(selectedDate);
+                showAlert(`Daily summary generated for ${currentReportData.length} students`, 'success', 3000);
+
+            } catch (error) {
+                Debug.error(`Failed to generate daily summary: ${error.message}`);
+                showAlert('Unable to generate daily summary. Please try again.', 'error');
+            } finally {
+                setButtonLoading('generateDailyBtn', 'dailyBtnText', false);
+            }
+        }
+
+        function displayDailySummary(date) {
+            document.getElementById('reportTitle').textContent = `Daily Summary: ${date}`;
+            
+            let summaryHtml = `
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-value">${currentReportData.length}</div>
+                        <div class="summary-label">Students with Records</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${currentReportData.reduce((sum, r) => sum + r.total_records, 0)}</div>
+                        <div class="summary-label">Total Records</div>
+                    </div>
+                </div>
+            `;
+
+            let tableHtml = `
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Class</th>
+                                <th>Bus Number</th>
+                                <th>Records</th>
+                                <th>Total Records</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            if (currentReportData.length === 0) {
+                tableHtml += '<tr><td colspan="5" class="no-data">No attendance records found for this date</td></tr>';
+            } else {
+                currentReportData.forEach(record => {
+                    tableHtml += `
+                        <tr>
+                            <td>${record.student_name}</td>
+                            <td>${record.class}</td>
+                            <td>${record.vehicle}</td>
+                            <td>${record.records}</td>
+                            <td>${record.total_records}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            tableHtml += '</tbody></table></div>';
+
+            document.getElementById('summarySection').innerHTML = summaryHtml;
+            document.getElementById('reportContent').innerHTML = tableHtml;
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        async function generateWeeklyReport() {
+            const startDate = new Date(document.getElementById('weekStartDate').value);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 6);
+
+            const fromDate = startDate.toISOString().split('T')[0];
+            const toDate = endDate.toISOString().split('T')[0];
+
+            try {
+                setButtonLoading('generateWeeklyBtn', 'weeklyBtnText', true);
+                
+                await loadStudents(fromDate, toDate);
+                currentReportData = [];
+                
+                allStudentsData.forEach(student => {
+                    const studentWeekData = {
+                        student_name: student.student_name,
+                        class: `${student.class_name}-${student.section}`,
+                        vehicle: student.vehicle,
+                        days_with_records: 0,
+                        total_records: 0
+                    };
+
+                    if (student.attendance_by_mid && student.attendance_by_mid.length > 0) {
+                        student.attendance_by_mid.forEach(busData => {
+                            const weekRecords = busData.attendances.filter(attendance => {
+                                const attendanceDate = new Date(attendance.time);
+                                return attendanceDate >= startDate && attendanceDate <= endDate;
+                            });
+
+                            if (weekRecords.length > 0) {
+                                const uniqueDays = [...new Set(weekRecords.map(r => new Date(r.time).toDateString()))];
+                                studentWeekData.days_with_records = uniqueDays.length;
+                                studentWeekData.total_records = weekRecords.length;
+                            }
+                        });
+                    }
+
+                    currentReportData.push(studentWeekData);
+                });
+
+                displayWeeklyReport(startDate, endDate);
+                showAlert(`Weekly report generated for ${currentReportData.length} students`, 'success', 3000);
+
+            } catch (error) {
+                Debug.error(`Failed to generate weekly report: ${error.message}`);
+                showAlert('Unable to generate weekly report. Please try again.', 'error');
+            } finally {
+                setButtonLoading('generateWeeklyBtn', 'weeklyBtnText', false);
+            }
+        }
+
+        function displayWeeklyReport(startDate, endDate) {
+            document.getElementById('reportTitle').textContent = `Weekly Report: ${startDate.toDateString()} - ${endDate.toDateString()}`;
+            
+            const studentsWithRecords = currentReportData.filter(r => r.total_records > 0).length;
+            const totalRecords = currentReportData.reduce((sum, r) => sum + r.total_records, 0);
+
+            let summaryHtml = `
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-value">${currentReportData.length}</div>
+                        <div class="summary-label">Total Students</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${studentsWithRecords}</div>
+                        <div class="summary-label">Students with Records</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${totalRecords}</div>
+                        <div class="summary-label">Total Records</div>
+                    </div>
+                </div>
+            `;
+
+            let tableHtml = `
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Class</th>
+                                <th>Bus Number</th>
+                                <th>Days with Records</th>
+                                <th>Total Records</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            currentReportData.forEach(record => {
+                tableHtml += `
+                    <tr>
+                        <td>${record.student_name}</td>
+                        <td>${record.class}</td>
+                        <td>${record.vehicle}</td>
+                        <td>${record.days_with_records}</td>
+                        <td>${record.total_records}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += '</tbody></table></div>';
+
+            document.getElementById('summarySection').innerHTML = summaryHtml;
+            document.getElementById('reportContent').innerHTML = tableHtml;
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        async function generateMonthlySummary() {
+            const monthValue = document.getElementById('monthSelect').value;
+            const [year, month] = monthValue.split('-');
+            const startDate = new Date(year, month - 1, 1);
+            const endDate = new Date(year, month, 0);
+
+            const fromDate = startDate.toISOString().split('T')[0];
+            const toDate = endDate.toISOString().split('T')[0];
+
+            try {
+                setButtonLoading('generateMonthlyBtn', 'monthlyBtnText', true);
+                
+                await loadStudents(fromDate, toDate);
+                currentReportData = [];
+                
+                allStudentsData.forEach(student => {
+                    const studentMonthData = {
+                        student_name: student.student_name,
+                        class: `${student.class_name}-${student.section}`,
+                        vehicle: student.vehicle,
+                        days_with_records: 0,
+                        total_records: 0,
+                        first_record: null,
+                        last_record: null
+                    };
+
+                    if (student.attendance_by_mid && student.attendance_by_mid.length > 0) {
+                        student.attendance_by_mid.forEach(busData => {
+                            const monthRecords = busData.attendances.filter(attendance => {
+                                const attendanceDate = new Date(attendance.time);
+                                return attendanceDate >= startDate && attendanceDate <= endDate;
+                            });
+
+                            if (monthRecords.length > 0) {
+                                const uniqueDays = [...new Set(monthRecords.map(r => new Date(r.time).toDateString()))];
+                                studentMonthData.days_with_records = uniqueDays.length;
+                                studentMonthData.total_records = monthRecords.length;
+                                
+                                const sortedRecords = monthRecords.sort((a, b) => new Date(a.time) - new Date(b.time));
+                                studentMonthData.first_record = new Date(sortedRecords[0].time).toLocaleDateString();
+                                studentMonthData.last_record = new Date(sortedRecords[sortedRecords.length - 1].time).toLocaleDateString();
+                            }
+                        });
+                    }
+
+                    currentReportData.push(studentMonthData);
+                });
+
+                displayMonthlySummary(monthValue);
+                showAlert(`Monthly summary generated for ${currentReportData.length} students`, 'success', 3000);
+
+            } catch (error) {
+                Debug.error(`Failed to generate monthly summary: ${error.message}`);
+                showAlert('Unable to generate monthly summary. Please try again.', 'error');
+            } finally {
+                setButtonLoading('generateMonthlyBtn', 'monthlyBtnText', false);
+            }
+        }
+
+        function displayMonthlySummary(monthValue) {
+            const monthNames = ["January", "February", "March", "April", "May", "June", 
+                               "July", "August", "September", "October", "November", "December"];
+            const [year, month] = monthValue.split('-');
+            const monthName = monthNames[parseInt(month) - 1];
+            
+            document.getElementById('reportTitle').textContent = `Monthly Summary: ${monthName} ${year}`;
+            
+            const studentsWithRecords = currentReportData.filter(r => r.total_records > 0).length;
+            const totalRecords = currentReportData.reduce((sum, r) => sum + r.total_records, 0);
+            const totalDays = new Date(year, month, 0).getDate();
+
+            let summaryHtml = `
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-value">${studentsWithRecords}</div>
+                        <div class="summary-label">Active Students</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${totalRecords}</div>
+                        <div class="summary-label">Total Records</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value">${totalDays}</div>
+                        <div class="summary-label">Total Days</div>
+                    </div>
+                </div>
+            `;
+
+            let tableHtml = `
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Class</th>
+                                <th>Bus Number</th>
+                                <th>Days with Records</th>
+                                <th>Total Records</th>
+                                <th>First Record</th>
+                                <th>Last Record</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            currentReportData.forEach(record => {
+                tableHtml += `
+                    <tr>
+                        <td>${record.student_name}</td>
+                        <td>${record.class}</td>
+                        <td>${record.vehicle}</td>
+                        <td>${record.days_with_records}</td>
+                        <td>${record.total_records}</td>
+                        <td>${record.first_record || '-'}</td>
+                        <td>${record.last_record || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += '</tbody></table></div>';
+
+            document.getElementById('summarySection').innerHTML = summaryHtml;
+            document.getElementById('reportContent').innerHTML = tableHtml;
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        function downloadExcel() {
+            if (currentReportData.length === 0) {
+                showAlert('No data to export', 'warning');
+                return;
+            }
+
+            const reportTitle = document.getElementById('reportTitle').textContent;
+            
+            let csvContent = reportTitle + '\n\n';
+            
+            const table = document.querySelector('#reportContent table');
+            if (table) {
+                const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
+                const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr => 
+                    Array.from(tr.querySelectorAll('td')).map(td => td.textContent.replace(/,/g, ';'))
+                );
+                
+                csvContent += headers.join(',') + '\n';
+                rows.forEach(row => {
+                    csvContent += row.join(',') + '\n';
+                });
+            }
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `${reportTitle.replace(/[^a-z0-9]/gi, '_')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert('Excel file downloaded successfully!', 'success', 3000);
+            Debug.success(`Excel export completed: ${reportTitle}`);
+        }
+
+        function downloadPDF() {
+            if (currentReportData.length === 0) {
+                showAlert('No data to export', 'warning');
+                return;
+            }
+
+            const reportTitle = document.getElementById('reportTitle').textContent;
+            const summarySection = document.getElementById('summarySection').innerHTML;
+            const reportContent = document.getElementById('reportContent').innerHTML;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+          
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+                        h1 { color: #2c3e50; margin-bottom: 20px; }
+                        .summary-cards { display: flex; gap: 15px; margin-bottom: 20px; }
+                        .summary-card { background: #f8f9fa; padding: 15px; border-radius: 6px; text-align: center; flex: 1; border: 1px solid #dee2e6; }
+                        .summary-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+                        .summary-label { font-size: 12px; color: #666; margin-top: 5px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        th, td { padding: 10px; text-align: left; border: 1px solid #ddd; }
+                        th { background: #f8f9fa; font-weight: 600; }
+                        .status-boarded { color: #27ae60; font-weight: bold; }
+                        .status-deboarded { color: #e74c3c; font-weight: bold; }
+                        .status-duplicate { color: #f39c12; font-weight: bold; }
+                        .record-cell { font-size: 12px; padding: 5px; margin: 2px 0; }
+                        @media print {
+                            .summary-cards { display: block; }
+                            .summary-card { display: inline-block; width: 23%; margin-right: 2%; }
+                        }
+                    </style>
+               
+                    <h1>${reportTitle}</h1>
+                    ${summarySection}
+                    ${reportContent}
+                    <div style="margin-top: 20px; font-size: 12px; color: #666;">
+                        Generated on: ${new Date().toLocaleString()}
+                    </div>
+             
+            `);
+            printWindow.document.close();
+            printWindow.print();
+            
+            showAlert('PDF generation initiated!', 'success', 3000);
+            Debug.success(`PDF export initiated: ${reportTitle}`);
+        }
+    </script>
+</body>
+</html>
