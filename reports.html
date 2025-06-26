@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SchoolBus2.0 Bus Attendance Reports</title>
     <meta name="robots" content="noindex">
+    <link href="https://blockly.co.in/img/favicon.ico" rel="icon" type="image/x-icon">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; }
@@ -633,6 +635,8 @@
             const mid = document.getElementById('busSelect').value;
             const fromDate = document.getElementById('busFromDate').value;
             const toDate = document.getElementById('busToDate').value;
+            console.log("from and to date")
+            console.log(fromDate,toDate);
 
             if (!fromDate || !toDate) {
                 showAlert('Please select both from and to dates', 'warning');
@@ -642,7 +646,7 @@
             try {
                 setButtonLoading('generateBusBtn', 'busBtnText', true);
                 
-                const url = `${CONFIG.BASE_URL}${CONFIG.ENDPOINTS.BUS_ATTENDANCE}?mid=${mid}`;
+                const url = `${CONFIG.BASE_URL}${CONFIG.ENDPOINTS.BUS_ATTENDANCE}?mid=${mid}&fromDate=${fromDate}&toDate=${toDate}`;
                 const busData = await fetchWithRetry(url);
                 
                 currentReportData = [];
