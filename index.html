@@ -28,11 +28,11 @@
         }
 
         .container {
-            max-width: 1600px;
+            max-width: 1500px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 20px;
             overflow: hidden;
         }
 
@@ -40,6 +40,7 @@
             background: linear-gradient(135deg, #4285F4 0%, #4285F4 100%);
             color: white;
             padding: 30px;
+            border-radius: 12px;
             text-align: center;
             position: relative;
         }
@@ -470,6 +471,11 @@
             <div id="dashboardTab" class="tab-content active">
                 <div class="stats-grid">
                     <div class="stat-card total">
+                        <div class="stat-number" id="totalBuses">0</div>
+                        <div class="stat-label">Active Buses</div>
+                    </div>
+                    
+                    <div class="stat-card total">
                         <div class="stat-number" id="totalStudents">0</div>
                         <div class="stat-label">Total Students</div>
                     </div>
@@ -485,14 +491,11 @@
                         <div class="stat-number" id="deboardedCount">0</div>
                         <div class="stat-label">Deboarded Today</div>
                     </div>
-                    <div class="stat-card duplicate">
+                    <div class="stat-card duplicate" style="visibility: hidden; position: absolute; left: -9999px;">
                         <div class="stat-number" id="duplicateCount">0</div>
                         <div class="stat-label">Duplicate Taps</div>
                     </div>
-                    <div class="stat-card total">
-                        <div class="stat-number" id="totalBuses">0</div>
-                        <div class="stat-label">Active Buses</div>
-                    </div>
+                    
                 </div>
 
                 <div class="analytics-row">
@@ -945,7 +948,7 @@
                     labels: ['Present', 'Absent'],
                     datasets: [{
                         data: [presentStudents, totalStudents - presentStudents],
-                        backgroundColor: ['#28a745', '#dc3545'],
+                        backgroundColor: ['#00BC59', '#FF7575'],
                         borderWidth: 2
                     }]
                 },
