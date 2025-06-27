@@ -448,8 +448,8 @@
             </div>
             
             <div class="action-buttons">
-                <button class="btn" onclick="refreshAllData()">🔄 Refresh</button>
-                <button class="btn btn-success" onclick="exportToExcel()">📊 Export Excel</button>
+<!--                 <button class="btn" onclick="refreshAllData()">🔄 Refresh</button>
+                <button class="btn btn-success" onclick="exportToExcel()">📊 Export Excel</button> -->
                 <!-- <button class="btn btn-danger" onclick="exportToPDF()">📄 Export PDF</button> -->
             </div>
             
@@ -516,7 +516,7 @@
 
             <!-- Analytics Tab -->
             <div id="analyticsTab" class="tab-content">
-                <div class="export-section">
+<!--                 <div class="export-section">
                     <div class="export-title">📊 Advanced Analytics & Reports</div>
                     <div class="export-buttons">
                         <button class="btn" onclick="generateMonthlyReport()">📅 Monthly Report</button>
@@ -524,7 +524,7 @@
                         <button class="btn btn-success" onclick="generateStudentReport()">👤 Student Analysis</button>
                         <button class="btn btn-danger" onclick="generateDuplicateReport()">⚠️ Duplicate Analysis</button>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="analytics-row">
                     <div class="chart-container">
@@ -858,7 +858,7 @@
                         <div class="student-header">
                             <div class="student-name">${student.student_name}</div>
                             <div class="student-details">
-                                RFID: ${student.rfid} | Class: ${student.class_name}-${student.section} | ${student.gender}
+                            RFID: ${student.rfid} | Class: ${student.class_name}-${student.section} | ${student.gender} | ${student.vehicle} | ${student.number}
                             </div>
                         </div>
                         <div class="student-body">
@@ -948,7 +948,7 @@
                     labels: ['Present', 'Absent'],
                     datasets: [{
                         data: [presentStudents, totalStudents - presentStudents],
-                        backgroundColor: ['#00BC59', '#FF7575'],
+                        backgroundColor: ['#7dd87f', '#e85d6b'],
                         borderWidth: 2
                     }]
                 },
