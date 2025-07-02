@@ -113,11 +113,11 @@
                 </div>
                 <div class="form-group">
                     <label>From Date:</label>
-                    <input type="date" id="studentFromDate" value="2025-06-15">
+                    <input type="date" id="studentFromDate" value="">
                 </div>
                 <div class="form-group">
                     <label>To Date:</label>
-                    <input type="date" id="studentToDate" value="2025-06-21">
+                    <input type="date" id="studentToDate" value="">
                 </div>
                 <button class="btn btn-primary" id="generateStudentBtn">
                     <span id="studentBtnText">Generate Report</span>
@@ -135,11 +135,11 @@
                 </div>
                 <div class="form-group">
                     <label>From Date:</label>
-                    <input type="date" id="busFromDate" value="2025-06-15">
+                    <input type="date" id="busFromDate" value="">
                 </div>
                 <div class="form-group">
                     <label>To Date:</label>
-                    <input type="date" id="busToDate" value="2025-06-21">
+                    <input type="date" id="busToDate" value="">
                 </div>
                 <button class="btn btn-primary" id="generateBusBtn">
                     <span id="busBtnText">Generate Report</span>
@@ -148,14 +148,14 @@
 
             <!-- Raw Data Report -->
             <div class="report-card">
-                <h3>📋 Raw Attendance Data</h3>
+                <h3>📋 All Attendance Data</h3>
                 <div class="form-group">
                     <label>From Date:</label>
-                    <input type="date" id="rawFromDate" value="2025-05-01">
+                    <input type="date" id="rawFromDate" value="">
                 </div>
                 <div class="form-group">
                     <label>To Date:</label>
-                    <input type="date" id="rawToDate" value="2025-06-23">
+                    <input type="date" id="rawToDate" value="">
                 </div>
                 <button class="btn btn-primary" id="generateRawBtn">
                     <span id="rawBtnText">Generate Report</span>
@@ -167,7 +167,7 @@
                 <h3>📅 Daily Summary</h3>
                 <div class="form-group">
                     <label>Select Date:</label>
-                    <input type="date" id="dailyDate" value="2025-06-21">
+                    <input type="date" id="dailyDate" value="">
                 </div>
                 <button class="btn btn-primary" id="generateDailyBtn">
                     <span id="dailyBtnText">Generate Summary</span>
@@ -179,7 +179,7 @@
                 <h3>📈 Weekly Report</h3>
                 <div class="form-group">
                     <label>Week Starting:</label>
-                    <input type="date" id="weekStartDate" value="2025-06-16">
+                    <input type="date" id="weekStartDate" value="">
                 </div>
                 <button class="btn btn-primary" id="generateWeeklyBtn">
                     <span id="weeklyBtnText">Generate Report</span>
@@ -192,9 +192,8 @@
                 <div class="form-group">
                     <label>Month:</label>
                     <select id="monthSelect">
+                        <option value="2025-07">July 2025</option>
                         <option value="2025-06">June 2025</option>
-                        <option value="2025-05">May 2025</option>
-                        <option value="2025-04">April 2025</option>
                     </select>
                 </div>
                 <button class="btn btn-primary" id="generateMonthlyBtn">
@@ -543,6 +542,14 @@
                 displayStudentReport(student);
                 showAlert(`Student report generated with ${currentReportData.length} records`, 'success', 3000);
                 
+                // Scroll down by one page
+                setTimeout(() => {
+                    window.scrollBy({
+                        top: window.innerHeight,
+                        behavior: 'smooth'
+                    });
+                }, 500);
+                
             } catch (error) {
                 Debug.error(`Failed to generate student report: ${error.message}`);
                 showAlert('Unable to generate student report. Please try again.', 'error');
@@ -673,6 +680,14 @@
 
                 displayBusReport(busData.bus_number);
                 showAlert(`Bus report generated with ${currentReportData.length} records`, 'success', 3000);
+
+                // Scroll down by one page
+                setTimeout(() => {
+                    window.scrollBy({
+                        top: window.innerHeight,
+                        behavior: 'smooth'
+                    });
+                }, 500);
                 
             } catch (error) {
                 Debug.error(`Failed to generate bus report: ${error.message}`);
@@ -818,6 +833,14 @@
 
                 displayRawDataReport();
                 showAlert(`Raw data report generated with ${currentReportData.length} records`, 'success', 3000);
+                
+                // Scroll down by one page
+                setTimeout(() => {
+                    window.scrollBy({
+                        top: window.innerHeight,
+                        behavior: 'smooth'
+                    });
+                }, 500);
 
             } catch (error) {
                 Debug.error(`Failed to generate raw data report: ${error.message}`);
@@ -828,7 +851,7 @@
         }
 
         function displayRawDataReport() {
-            document.getElementById('reportTitle').textContent = 'Raw Attendance Data';
+            document.getElementById('reportTitle').textContent = 'All Attendance Data';
             
             const totalStudents = [...new Set(currentReportData.map(r => r.student_name))].length;
             const activeStudents = [...new Set(currentReportData.filter(r => r.status !== 'No Records').map(r => r.student_name))].length;
@@ -928,6 +951,14 @@
 
                 displayDailySummary(selectedDate);
                 showAlert(`Daily summary generated for ${currentReportData.length} students`, 'success', 3000);
+                
+                // Scroll down by one page
+                setTimeout(() => {
+                    window.scrollBy({
+                        top: window.innerHeight,
+                        behavior: 'smooth'
+                    });
+                }, 500);
 
             } catch (error) {
                 Debug.error(`Failed to generate daily summary: ${error.message}`);
@@ -1034,6 +1065,14 @@
 
                 displayWeeklyReport(startDate, endDate);
                 showAlert(`Weekly report generated for ${currentReportData.length} students`, 'success', 3000);
+
+                // Scroll down by one page
+                setTimeout(() => {
+                    window.scrollBy({
+                        top: window.innerHeight,
+                        behavior: 'smooth'
+                    });
+                }, 500);
 
             } catch (error) {
                 Debug.error(`Failed to generate weekly report: ${error.message}`);
@@ -1150,6 +1189,14 @@
 
                 displayMonthlySummary(monthValue);
                 showAlert(`Monthly summary generated for ${currentReportData.length} students`, 'success', 3000);
+
+                // Scroll down by one page
+                setTimeout(() => {
+                    window.scrollBy({
+                        top: window.innerHeight,
+                        behavior: 'smooth'
+                    });
+                }, 500);
 
             } catch (error) {
                 Debug.error(`Failed to generate monthly summary: ${error.message}`);
